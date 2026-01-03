@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Flow - Genetic Algorithm</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .input-field {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        input, select {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            margin-left: 10px;
+        }
+        #results {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .result-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        .result-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .result-table tr:hover {
+            background: #f8f9fa;
+        }
+        .status {
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .status.running {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .chart-container {
+            margin-top: 20px;
+            height: 300px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            position: relative;
+        }
+        #fitnessChart {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Power Flow Analysis - Genetic Algorithm</h1>
+        <p class="subtitle">IEEE 5-Bus System Load Flow Solver</p>
+
+        <div class="section">
+            <h2>🔧 GA Parameters</h2>
+            <div class="input-group">
+                <div class="input-field">
+                    <label>Population Size</label>
+                    <input type="number" id="popSize" value="100" min="20" max="500">
+                </div>
+                <div class="input-field">
+                    <label>Max Generations</label>
+                    <input type="number" id="maxGen" value="300" min="50" max="1000">
+                </div>
+                <div class="input-field">
+                    <label>Crossover Rate</label>
+                    <input type="number" id="crossRate" value="0.8" step="0.05" min="0" max="1">
+                </div>
+                <div class="input-field">
+                    <label>Mutation Rate</label>
+                    <input type="number" id="mutRate" value="0.05" step="0.01" min="0" max="1">
+                </div>
+                <div class="input-field">
+                    <label>Convergence Threshold</label>
+                    <input type="number" id="convThresh" value="0.001" step="0.0001" min="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>⚙️ Voltage Constraints</h2>
+            <div class="input-group">
+                <div class="input-field">
+                    <label>Min Voltage (p.u.)</label>
+                    <input type="number" id="vMin" value="0.95" step="0.01" min="0.8" max="1">
+                </div>
+                <div class="input-field">
+                    <label>Max Voltage (p.u.)</label>
+                    <input type="number" id="vMax" value="1.05" step="0.01" min="1" max="1.2">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Network Configuration</h2>
+            <p style="margin-bottom: 15px; color: #666;">IEEE 5-Bus Test System</p>
+            <button onclick="runLoadFlow()">▶ Run Load Flow Analysis</button>
+            <button class="btn-secondary" onclick="resetResults()">🔄 Reset</button>
+        </div>
+
+        <div id="resultsSection" class="section" style="display: none;">
+            <h2>📊 Results</h2>
+            <div id="statusDiv"></div>
+            <div id="progressDiv" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar">0%</div>
+                </div>
+            </div>
+            <div id="results"></div>
+            <div class="chart-container">
+                <canvas id="fitnessChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Complex number class
+        class Complex {
+            constructor(real, imag) {
+                this.real = real;
+                this.imag = imag;
+            }
+            add(c) {
+                return new Complex(this.real + c.real, this.imag + c.imag);
+            }
+            sub(c) {
+                return new Complex(this.real - c.real, this.imag - c.imag);
+            }
+            mult(c) {
+                return new Complex(
+                    this.real * c.real - this.imag * c.imag,
+                    this.real * c.imag + this.imag * c.real
+                );
+            }
+            magnitude() {
+                return Math.sqrt(this.real * this.real + this.imag * this.imag);
+            }
+            angle() {
+                return Math.atan2(this.imag, this.real);
+            }
+        }
+
+        // IEEE 5-Bus System Data
+        const system = {
+            buses: [
+                { id: 0, type: 'slack', V: 1.06, angle: 0, Pg: 0, Qg: 0, Pl: 0, Ql: 0 },
+                { id: 1, type: 'PQ', V: 1.0, angle: 0, Pg: 0, Qg: 0, Pl: 0.8, Ql: 0.4 },
+                { id: 2, type: 'PQ', V: 1.0, angle: 0, Pg: 0, Qg: 0, Pl: 1.2, Ql: 0.6 },
+                { id: 3, type: 'PV', V: 1.04, angle: 0, Pg: 1.0, Qg: 0, Pl: 0.6, Ql: 0.3 },
+                { id: 4, type: 'PQ', V: 1.0, angle: 0, Pg: 0, Qg: 0, Pl: 0.4, Ql: 0.2 }
+            ],
+            lines: [
+                { from: 0, to: 1, R: 0.02, X: 0.06, B: 0.03 },
+                { from: 0, to: 3, R: 0.01, X: 0.04, B: 0.015 },
+                { from: 1, to: 2, R: 0.03, X: 0.09, B: 0.04 },
+                { from: 1, to: 3, R: 0.025, X: 0.08, B: 0.035 },
+                { from: 2, to: 4, R: 0.02, X: 0.06, B: 0.03 },
+                { from: 3, to: 4, R: 0.015, X: 0.05, B: 0.025 }
+            ],
+            baseMVA: 100
+        };
+
+        // Build Y-bus matrix
+        function buildYbus() {
+            const n = system.buses.length;
+            const Y = Array(n).fill(0).map(() => Array(n).fill(0).map(() => new Complex(0, 0)));
+
+            system.lines.forEach(line => {
+                const y = new Complex(
+                    line.R / (line.R * line.R + line.X * line.X),
+                    -line.X / (line.R * line.R + line.X * line.X)
+                );
+                const b = new Complex(0, line.B);
+
+                Y[line.from][line.from] = Y[line.from][line.from].add(y).add(b);
+                Y[line.to][line.to] = Y[line.to][line.to].add(y).add(b);
+                Y[line.from][line.to] = Y[line.from][line.to].sub(y);
+                Y[line.to][line.from] = Y[line.to][line.from].sub(y);
+            });
+
+            return Y;
+        }
+
+        const Ybus = buildYbus();
+
+        // Calculate power at a bus
+        function calculatePower(V, theta, busIdx) {
+            let P = 0, Q = 0;
+            const n = system.buses.length;
+
+            for (let j = 0; j < n; j++) {
+                const Vj = V[j];
+                const thetaIJ = theta[busIdx] - theta[j];
+                const Y = Ybus[busIdx][j];
+                const G = Y.real;
+                const B = Y.imag;
+
+                P += Vj * (G * Math.cos(thetaIJ) + B * Math.sin(thetaIJ));
+                Q += Vj * (G * Math.sin(thetaIJ) - B * Math.cos(thetaIJ));
+            }
+
+            return { P: V[busIdx] * P, Q: V[busIdx] * Q };
+        }
+
+        // Fitness function
+        function fitness(chromosome, vMin, vMax) {
+            const V = [...chromosome.slice(0, system.buses.length)];
+            const theta = [...chromosome.slice(system.buses.length)];
+
+            let error = 0;
+            let penalty = 0;
+
+            system.buses.forEach((bus, i) => {
+                if (bus.type === 'slack') return;
+
+                const calc = calculatePower(V, theta, i);
+                const Pspec = bus.Pg - bus.Pl;
+                const Qspec = bus.Qg - bus.Ql;
+
+                error += Math.pow(calc.P - Pspec, 2);
+                if (bus.type === 'PQ') {
+                    error += Math.pow(calc.Q - Qspec, 2);
+                }
+
+                // Voltage constraint penalty
+                if (V[i] < vMin || V[i] > vMax) {
+                    penalty += 1000 * Math.pow(Math.max(vMin - V[i], V[i] - vMax, 0), 2);
+                }
+            });
+
+            return error + penalty;
+        }
+
+        // Genetic Algorithm
+        function geneticAlgorithm(params, vMin, vMax, progressCallback) {
+            const { popSize, maxGen, crossRate, mutRate, convThresh } = params;
+            const n = system.buses.length;
+            
+            // Initialize population
+            let population = [];
+            for (let i = 0; i < popSize; i++) {
+                const chromosome = [];
+                // Voltage magnitudes
+                for (let j = 0; j < n; j++) {
+                    chromosome.push(system.buses[j].type === 'slack' ? system.buses[j].V : 
+                                   (vMin + Math.random() * (vMax - vMin)));
+                }
+                // Angles (radians)
+                for (let j = 0; j < n; j++) {
+                    chromosome.push(system.buses[j].type === 'slack' ? 0 : 
+                                   (Math.random() * 0.2 - 0.1));
+                }
+                population.push(chromosome);
+            }
+
+            const fitnessHistory = [];
+            let bestSolution = null;
+            let bestFitness = Infinity;
+
+            for (let gen = 0; gen < maxGen; gen++) {
+                // Evaluate fitness
+                const fitnessScores = population.map(ind => fitness(ind, vMin, vMax));
+                
+                const minFitness = Math.min(...fitnessScores);
+                const minIdx = fitnessScores.indexOf(minFitness);
+                
+                if (minFitness < bestFitness) {
+                    bestFitness = minFitness;
+                    bestSolution = [...population[minIdx]];
+                }
+
+                fitnessHistory.push(bestFitness);
+
+                if (progressCallback) {
+                    progressCallback(gen + 1, maxGen, bestFitness);
+                }
+
+                if (bestFitness < convThresh) break;
+
+                // Selection (tournament)
+                const newPop = [];
+                const eliteCount = Math.floor(popSize * 0.1);
+                
+                // Elitism
+                const sortedIndices = fitnessScores
+                    .map((f, i) => ({ f, i }))
+                    .sort((a, b) => a.f - b.f)
+                    .slice(0, eliteCount)
+                    .map(x => x.i);
+                
+                sortedIndices.forEach(idx => newPop.push([...population[idx]]));
+
+                // Generate rest of population
+                while (newPop.length < popSize) {
+                    const parent1 = tournament(population, fitnessScores, 5);
+                    const parent2 = tournament(population, fitnessScores, 5);
+
+                    let child1 = [...parent1];
+                    let child2 = [...parent2];
+
+                    // Crossover
+                    if (Math.random() < crossRate) {
+                        const point = Math.floor(Math.random() * parent1.length);
+                        child1 = [...parent1.slice(0, point), ...parent2.slice(point)];
+                        child2 = [...parent2.slice(0, point), ...parent1.slice(point)];
+                    }
+
+                    // Mutation
+                    child1 = mutate(child1, mutRate, vMin, vMax);
+                    child2 = mutate(child2, mutRate, vMin, vMax);
+
+                    newPop.push(child1);
+                    if (newPop.length < popSize) newPop.push(child2);
+                }
+
+                population = newPop;
+            }
+
+            return { solution: bestSolution, fitness: bestFitness, history: fitnessHistory };
+        }
+
+        function tournament(population, fitnessScores, k) {
+            let best = null;
+            let bestFitness = Infinity;
+
+            for (let i = 0; i < k; i++) {
+                const idx = Math.floor(Math.random() * population.length);
+                if (fitnessScores[idx] < bestFitness) {
+                    bestFitness = fitnessScores[idx];
+                    best = population[idx];
+                }
+            }
+
+            return best;
+        }
+
+        function mutate(chromosome, rate, vMin, vMax) {
+            const n = system.buses.length;
+            const mutated = [...chromosome];
+
+            for (let i = 0; i < chromosome.length; i++) {
+                if (Math.random() < rate) {
+                    if (i < n) {
+                        // Voltage mutation
+                        if (system.buses[i].type !== 'slack') {
+                            mutated[i] += (Math.random() - 0.5) * 0.05;
+                            mutated[i] = Math.max(vMin, Math.min(vMax, mutated[i]));
+                        }
+                    } else {
+                        // Angle mutation
+                        const busIdx = i - n;
+                        if (system.buses[busIdx].type !== 'slack') {
+                            mutated[i] += (Math.random() - 0.5) * 0.1;
+                        }
+                    }
+                }
+            }
+
+            return mutated;
+        }
+
+        // UI Functions
+        function runLoadFlow() {
+            const params = {
+                popSize: parseInt(document.getElementById('popSize').value),
+                maxGen: parseInt(document.getElementById('maxGen').value),
+                crossRate: parseFloat(document.getElementById('crossRate').value),
+                mutRate: parseFloat(document.getElementById('mutRate').value),
+                convThresh: parseFloat(document.getElementById('convThresh').value)
+            };
+
+            const vMin = parseFloat(document.getElementById('vMin').value);
+            const vMax = parseFloat(document.getElementById('vMax').value);
+
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('progressDiv').style.display = 'block';
+            document.getElementById('statusDiv').innerHTML = '<div class="status running">⏳ Running genetic algorithm...</div>';
+            document.getElementById('results').innerHTML = '';
+
+            setTimeout(() => {
+                const result = geneticAlgorithm(params, vMin, vMax, (gen, maxGen, fit) => {
+                    const progress = (gen / maxGen * 100).toFixed(1);
+                    document.getElementById('progressBar').style.width = progress + '%';
+                    document.getElementById('progressBar').textContent = `Gen ${gen}/${maxGen} - Fitness: ${fit.toFixed(6)}`;
+                });
+
+                displayResults(result);
+                plotFitness(result.history);
+            }, 100);
+        }
+
+        function displayResults(result) {
+            const n = system.buses.length;
+            const V = result.solution.slice(0, n);
+            const theta = result.solution.slice(n).map(t => t * 180 / Math.PI);
+
+            const statusClass = result.fitness < 0.01 ? 'success' : 'error';
+            const statusText = result.fitness < 0.01 ? '✓ Converged successfully!' : '⚠ Did not fully converge';
+
+            let html = `<div class="status ${statusClass}">${statusText} - Final Fitness: ${result.fitness.toFixed(6)}</div>`;
+            html += '<table class="result-table"><thead><tr><th>Bus</th><th>Type</th><th>V (p.u.)</th><th>Angle (°)</th><th>P (MW)</th><th>Q (MVAr)</th></tr></thead><tbody>';
+
+            system.buses.forEach((bus, i) => {
+                const calc = calculatePower(V, theta.map(t => t * Math.PI / 180), i);
+                html += `<tr>
+                    <td><strong>Bus ${i}</strong></td>
+                    <td>${bus.type}</td>
+                    <td>${V[i].toFixed(4)}</td>
+                    <td>${theta[i].toFixed(2)}</td>
+                    <td>${(calc.P * system.baseMVA).toFixed(2)}</td>
+                    <td>${(calc.Q * system.baseMVA).toFixed(2)}</td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('results').innerHTML = html;
+            document.getElementById('progressDiv').style.display = 'none';
+        }
+
+        function plotFitness(history) {
+            const canvas = document.getElementById('fitnessChart');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            const w = canvas.width;
+            const h = canvas.height;
+            const padding = 40;
+
+            ctx.clearRect(0, 0, w, h);
+
+            const maxFit = Math.max(...history);
+            const minFit = Math.min(...history);
+
+            // Draw axes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, h - padding);
+            ctx.lineTo(w - padding, h - padding);
+            ctx.stroke();
+
+            // Draw curve
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+
+            history.forEach((fit, i) => {
+                const x = padding + (i / (history.length - 1)) * (w - 2 * padding);
+                const y = h - padding - ((fit - minFit) / (maxFit - minFit || 1)) * (h - 2 * padding);
+                
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.fillText('Generation', w / 2 - 30, h - 10);
+            ctx.save();
+            ctx.translate(15, h / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Fitness', 0, 0);
+            ctx.restore();
+        }
+
+        function resetResults() {
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('results').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

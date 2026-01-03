@@ -1,0 +1,620 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage{enumitem}
+
+\geometry{margin=1in}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{PowerGrid Designer Documentation}}
+\fancyhead[R]{\thepage}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    pdftitle={PowerGrid Designer Documentation},
+    pdfpagemode=FullScreen,
+}
+
+\lstset{
+    language=JavaScript,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny,
+    frame=single,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{PowerGrid Designer: A Web-Based Power System Analysis Tool}
+\author{PowerGrid Designer Team}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+PowerGrid Designer is a comprehensive web-based application for designing, analyzing, and optimizing electrical power systems. The application combines an intuitive drag-and-drop interface with advanced genetic algorithm-based load flow calculations to provide engineers and students with a powerful tool for power system analysis. This documentation provides a complete guide to understanding the application's functionality and using it effectively for power system studies.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+\subsection{What is PowerGrid Designer?}
+
+PowerGrid Designer is a modern web application developed for electrical power system analysis and design. The application provides engineers, researchers, and students with an intuitive platform to:
+
+\begin{itemize}
+    \item Design electrical networks using a visual drag-and-drop interface
+    \item Perform load flow analysis using genetic algorithms
+    \item Analyze power system performance and optimization
+    \item Export designs to industry-standard formats
+    \item Study various network topologies and configurations
+\end{itemize}
+
+\subsection{Key Features}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{application_interface.png}
+    \caption{Main application interface showing the design canvas and control panels}
+    \label{fig:main_interface}
+\end{figure}
+
+The application offers several key features:
+
+\begin{enumerate}
+    \item \textbf{Visual Network Design}: Drag-and-drop interface for creating power system networks
+    \item \textbf{Genetic Algorithm Solver}: Advanced optimization-based load flow calculations
+    \item \textbf{Real-time Analysis}: Live fitness convergence monitoring and result visualization
+    \item \textbf{Multiple Selection Methods}: Tournament, Roulette Wheel, Rank-based, and Stochastic Universal Sampling
+    \item \textbf{Industry Standards}: Support for PSS/E RAW format export
+    \item \textbf{Educational Templates}: Pre-built IEEE test systems (3-bus, 5-bus, 14-bus)
+    \item \textbf{Component Library}: Comprehensive library of generation, load, and transmission components
+\end{enumerate}
+
+\section{How It Functions}
+
+\subsection{Technical Architecture}
+
+\subsubsection{Frontend Architecture}
+
+The application is built using modern web technologies:
+
+\begin{itemize}
+    \item \textbf{React 19}: Component-based user interface framework
+    \item \textbf{TypeScript}: Type-safe JavaScript for robust development
+    \item \textbf{Vite}: Fast build tool and development server
+    \item \textbf{Lucide React}: Modern icon library
+    \item \textbf{Tailwind CSS}: Utility-first CSS framework
+\end{itemize}
+
+\subsubsection{Algorithm Implementation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{ga_flowchart.png}
+    \caption{Genetic algorithm flow for load flow optimization}
+    \label{fig:ga_flowchart}
+\end{figure}
+
+The core of the application is a genetic algorithm (GA) implementation for solving power flow problems. The GA operates on the following principles:
+
+\paragraph{Problem Formulation}
+Power flow analysis involves solving the nonlinear equations that describe power system steady-state operation:
+
+\begin{align}
+P_i &= V_i \sum_{j=1}^n V_j (G_{ij} \cos \theta_{ij} + B_{ij} \sin \theta_{ij}) \\
+Q_i &= V_i \sum_{j=1}^n V_j (G_{ij} \sin \theta_{ij} - B_{ij} \cos \theta_{ij})
+\end{align}
+
+Where:
+\begin{itemize}
+    \item $P_i, Q_i$: Active and reactive power injections at bus $i$
+    \item $V_i, \theta_i$: Voltage magnitude and angle at bus $i$
+    \item $G_{ij}, B_{ij}$: Real and imaginary parts of the Y-bus matrix elements
+\end{itemize}
+
+\paragraph{Genetic Algorithm Structure}
+
+The GA implementation includes:
+
+\begin{enumerate}
+    \item \textbf{Chromosome Representation}: Each individual represents bus voltage magnitudes and angles
+    \item \textbf{Fitness Function}: Minimizes power balance violations with penalty terms
+    \item \textbf{Selection Methods}: Multiple selection strategies available
+    \item \textbf{Crossover and Mutation}: Genetic operators for solution evolution
+    \item \textbf{Convergence Criteria}: Multiple stopping conditions
+\end{enumerate}
+
+\subsubsection{Fitness Function}
+
+The fitness function combines multiple objectives:
+
+\begin{equation}
+f = \alpha \sum (P_{calc} - P_{spec})^2 + \beta \sum (Q_{calc} - Q_{spec})^2 + \gamma \sum losses + \text{voltage penalties}
+\end{equation}
+
+Where $\alpha, \beta, \gamma$ are user-configurable penalty weights.
+
+\subsection{Selection Methods}
+
+The application implements four selection methods:
+
+\subsubsection{Tournament Selection}
+Randomly selects $k$ individuals and chooses the best. Tournament size is user-configurable.
+
+\subsubsection{Roulette Wheel Selection}
+Probability of selection proportional to fitness. Inverted fitness used for minimization problems.
+
+\subsubsection{Rank-Based Selection}
+Selection based on population ranking with linear probability distribution.
+
+\subsubsection{Stochastic Universal Sampling}
+Multiple selection points ensure better population diversity.
+
+\section{Getting Started}
+
+\subsection{System Requirements}
+
+\begin{itemize}
+    \item Modern web browser (Chrome, Firefox, Safari, Edge)
+    \item Internet connection for initial load
+    \item Minimum 4GB RAM recommended
+    \item Screen resolution 1280x720 or higher
+\end{itemize}
+
+\subsection{Installation and Setup}
+
+\subsubsection{Local Development Setup}
+
+\begin{lstlisting}[caption=Installation commands]
+# Clone the repository
+git clone <repository-url>
+cd powergrid-designer
+
+# Install dependencies
+npm install
+
+# Set up Gemini API key
+echo "GEMINI_API_KEY=your_api_key_here" > .env.local
+
+# Start development server
+npm run dev
+\end{lstlisting}
+
+\subsubsection{Accessing the Application}
+
+\begin{enumerate}
+    \item Open a web browser
+    \item Navigate to \url{http://localhost:5173} (development) or the deployed URL
+    \item The application loads with an empty canvas
+\end{enumerate}
+
+\section{User Guide}
+
+\subsection{Interface Overview}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{interface_overview.png}
+    \caption{Main interface components and layout}
+    \label{fig:interface_overview}
+\end{figure}
+
+The main interface consists of:
+
+\begin{enumerate}
+    \item \textbf{Header Bar}: Application title, navigation menus, undo/redo controls
+    \item \textbf{Library Panel}: Component library for adding network elements
+    \item \textbf{Design Canvas}: Main drawing area for network design
+    \item \textbf{Control Panel}: Parameter settings and solver controls
+    \item \textbf{Results Panel}: Analysis results and convergence plots
+\end{enumerate}
+
+\subsection{Creating Your First Network}
+
+\subsubsection{Step 1: Choose a Template}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{template_selection.png}
+    \caption{Template selection menu with IEEE test systems}
+    \label{fig:template_selection}
+\end{figure}
+
+\begin{enumerate}
+    \item Click the \textbf{Import} button in the header
+    \item Select \textbf{Example Templates}
+    \item Choose from:
+    \begin{itemize}
+        \item IEEE 3-Bus System (simple radial system)
+        \item IEEE 5-Bus System (meshed network)
+        \item IEEE 14-Bus System (comprehensive test case)
+        \item Radial Feeder (distribution system example)
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{Step 2: Understand Component Types}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{component_library.png}
+    \caption{Component library showing different element types}
+    \label{fig:component_library}
+\end{figure}
+
+The application supports three main bus types:
+
+\paragraph{Slack Bus (Reference)}
+\begin{itemize}
+    \item Maintains system frequency and voltage reference
+    \item Balances system power requirements
+    \item Usually represents the main power source
+\end{itemize}
+
+\paragraph{PV Bus (Generator)}
+\begin{itemize}
+    \item Fixed active power and voltage magnitude
+    \item Reactive power adjusts to maintain voltage
+    \item Represents synchronous generators
+\end{itemize}
+
+\paragraph{PQ Bus (Load)}
+\begin{itemize}
+    \item Fixed active and reactive power consumption
+    \item Voltage and angle are calculated
+    \item Represents loads or infinite buses
+\end{itemize}
+
+\subsection{Building Custom Networks}
+
+\subsubsection{Adding Components}
+
+\begin{enumerate}
+    \item Open the \textbf{Library Panel} (click the "Library" button)
+    \item Select a component category (Generation, Load, Transmission)
+    \item Drag components onto the canvas
+    \item Connect components by clicking the "+" button on source buses and then destination buses
+\end{enumerate}
+
+\subsubsection{Component Configuration}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{component_properties.png}
+    \caption{Component properties panel for parameter editing}
+    \label{fig:component_properties}
+\end{figure}
+
+Select any component on the canvas to edit its properties:
+
+\begin{itemize}
+    \item \textbf{Bus Properties}: Name, voltage setpoint, power ratings
+    \item \textbf{Line Properties}: Resistance, reactance, charging susceptance, thermal limits
+    \item \textbf{Transformer Properties}: Tap ratios, impedance values
+\end{itemize}
+
+\subsection{Running Load Flow Analysis}
+
+\subsubsection{Configure Solver Parameters}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{solver_parameters.png}
+    \caption{Genetic algorithm parameter configuration panel}
+    \label{fig:solver_parameters}
+\end{figure}
+
+Switch to the \textbf{Parameters} tab in the control panel:
+
+\paragraph{Population Settings}
+\begin{itemize}
+    \item \textbf{Population Size}: Number of individuals (50-1000)
+    \item \textbf{Max Generations}: Maximum iterations (100-2000)
+\end{itemize}
+
+\paragraph{Genetic Operators}
+\begin{itemize}
+    \item \textbf{Crossover Rate}: Probability of crossover (0.6-0.9)
+    \item \textbf{Mutation Rate}: Probability of mutation (0.01-0.1)
+\end{itemize}
+
+\paragraph{Selection Method}
+\begin{itemize}
+    \item Tournament (recommended for most cases)
+    \item Roulette Wheel (fitness proportional)
+    \item Rank-based (ranking-based selection)
+    \item Stochastic Universal (diversity preservation)
+\end{itemize}
+
+\paragraph{Penalty Weights}
+\begin{itemize}
+    \item Alpha: Active power violation penalty
+    \item Beta: Reactive power violation penalty
+    \item Gamma: Power loss penalty
+\end{itemize}
+
+\subsubsection{Execute Analysis}
+
+\begin{enumerate}
+    \item Click the \textbf{"Run Solver"} button
+    \item Monitor progress in the status indicator
+    \item View real-time fitness convergence in the results panel
+    \item Analysis completes when convergence criteria are met
+\end{enumerate}
+
+\subsection{Analyzing Results}
+
+\subsubsection{Understanding Output}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{results_analysis.png}
+    \caption{Results panel showing bus voltages, power flows, and convergence}
+    \label{fig:results_analysis}
+\end{figure}
+
+The results panel displays:
+
+\paragraph{Performance Summary}
+\begin{itemize}
+    \item Final fitness value
+    \item Number of generations executed
+    \item Convergence status
+\end{itemize}
+
+\paragraph{Bus Results Table}
+\begin{itemize}
+    \item Calculated voltage magnitudes and angles
+    \item Active and reactive power injections
+    \item Power balance verification
+\end{itemize}
+
+\paragraph{Line Results Table}
+\begin{itemize}
+    \item Power flows in each direction
+    \item Line losses
+    \item Loading percentages
+\end{itemize}
+
+\paragraph{Convergence Plot}
+Real-time visualization of fitness improvement over generations.
+
+\subsubsection{Exporting Results}
+
+\begin{enumerate}
+    \item Click the \textbf{Export} button in the header
+    \item Choose format:
+    \begin{itemize}
+        \item \textbf{JSON Config}: Save network design
+        \item \textbf{PSS/E RAW}: Export to power system simulation software
+    \end{itemize}
+    \item Results are automatically downloaded to your computer
+\end{enumerate}
+
+\subsection{Advanced Features}
+
+\subsubsection{Undo/Redo System}
+
+\begin{itemize}
+    \item \textbf{Ctrl+Z / Cmd+Z}: Undo last action
+    \item \textbf{Ctrl+Y / Cmd+Y}: Redo action
+    \item \textbf{Visual History}: Track changes in the status bar
+\end{itemize}
+
+\subsubsection{Canvas Navigation}
+
+\begin{itemize}
+    \item \textbf{Zoom}: Mouse wheel or zoom buttons (+/-)
+    \item \textbf{Pan}: Click and drag empty canvas areas
+    \item \textbf{Fit to Screen}: Double-click canvas or reset zoom button
+\end{itemize}
+
+\subsubsection{Component Management}
+
+\begin{itemize}
+    \item \textbf{Delete}: Select component and press Delete key
+    \item \textbf{Move}: Drag components to new positions
+    \item \textbf{Copy/Paste}: Not currently implemented (use templates)
+\end{itemize}
+
+\section{Tutorials and Examples}
+
+\subsection{Basic Tutorial: IEEE 3-Bus System}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{ieee3_tutorial.png}
+    \caption{IEEE 3-bus system tutorial setup}
+    \label{fig:ieee3_tutorial}
+\end{figure}
+
+This tutorial demonstrates basic power flow analysis:
+
+\begin{enumerate}
+    \item Load the IEEE 3-Bus template
+    \item Examine the network topology (1 slack, 1 PV, 1 PQ bus)
+    \item Configure GA parameters (use defaults for first run)
+    \item Run the solver and observe convergence
+    \item Analyze the results and power flows
+\end{enumerate}
+
+\subsubsection{Expected Results}
+\begin{itemize}
+    \item System converges within 100 generations
+    \item Slack bus provides power balance
+    \item PV bus maintains voltage while supplying power
+    \item PQ bus voltage adjusts to meet load requirements
+\end{itemize}
+
+\subsection{Advanced Tutorial: Network Optimization}
+
+\begin{enumerate}
+    \item Start with a radial feeder system
+    \item Add multiple load points
+    \item Experiment with different selection methods
+    \item Adjust penalty weights to optimize for different objectives
+    \item Compare convergence rates and solution quality
+\end{enumerate}
+
+\subsection{Troubleshooting Common Issues}
+
+\subsubsection{Solver Won't Converge}
+
+\begin{itemize}
+    \item \textbf{Check Network Topology}: Ensure system is properly connected
+    \item \textbf{Adjust Parameters}: Increase population size or generations
+    \item \textbf{Modify Constraints}: Relax voltage limits if too restrictive
+    \item \textbf{Balance Penalties}: Adjust alpha/beta/gamma weights
+\end{itemize}
+
+\subsubsection{Unrealistic Results}
+
+\begin{itemize}
+    \item \textbf{Verify Input Data}: Check component ratings and connections
+    \item \textbf{Stability Issues}: System may be operating outside stable region
+    \item \textbf{Parameter Tuning}: Try different GA parameter combinations
+\end{itemize}
+
+\subsubsection{Performance Issues}
+
+\begin{itemize}
+    \item \textbf{Large Networks}: Reduce population size for faster computation
+    \item \textbf{Browser Resources}: Close other tabs to free memory
+    \item \textbf{Convergence Criteria}: Increase convergence threshold for faster stopping
+\end{itemize}
+
+\section{Technical Reference}
+
+\subsection{Algorithm Parameters}
+
+\begin{table}[H]
+    \centering
+    \caption{Recommended parameter ranges for different problem sizes}
+    \label{tab:parameters}
+    \begin{tabular}{@{}lccc@{}}
+        \toprule
+        Parameter & Small System & Medium System & Large System \\
+        \midrule
+        Population Size & 50-100 & 100-200 & 200-500 \\
+        Max Generations & 200-500 & 500-1000 & 1000-2000 \\
+        Crossover Rate & 0.7-0.9 & 0.7-0.9 & 0.6-0.8 \\
+        Mutation Rate & 0.05-0.1 & 0.03-0.08 & 0.01-0.05 \\
+        Tournament Size & 3-5 & 5-7 & 7-10 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Mathematical Formulation}
+
+\subsubsection{Y-Bus Matrix Construction}
+
+The admittance matrix is constructed from line and transformer parameters:
+
+\begin{equation}
+Y_{ij} = -\frac{1}{Z_{ij}} + j\frac{B_{ij}}{2}
+\end{equation}
+
+\subsubsection{Power Flow Equations}
+
+For each bus $i$:
+
+\begin{align}
+P_i - jQ_i &= V_i^* I_i \\
+I_i &= \sum_{j=1}^n Y_{ij} V_j \\
+P_i - jQ_i &= V_i^* \sum_{j=1}^n Y_{ij} V_j
+\end{align}
+
+\subsubsection{Fitness Evaluation}
+
+The fitness function evaluates solution quality:
+
+\begin{equation}
+f(\mathbf{x}) = \sum_{i=1}^{n_{bus}} \left[ \alpha(P_{i,calc} - P_{i,spec})^2 + \beta(Q_{i,calc} - Q_{i,spec})^2 \right] + \gamma P_{loss} + V_{penalties}
+\end{equation}
+
+\subsection{File Formats}
+
+\subsubsection{JSON Network Format}
+
+\begin{lstlisting}[language=JSON, caption=Network design JSON structure]
+{
+  "nodes": [
+    {
+      "id": "bus-1",
+      "name": "Slack Bus",
+      "type": "SLACK",
+      "voltage": 1.05,
+      "pGen": 100,
+      "qGen": 20,
+      "x": 400,
+      "y": 200
+    }
+  ],
+  "edges": [
+    {
+      "id": "line-1",
+      "from": "bus-1",
+      "to": "bus-2",
+      "resistance": 0.02,
+      "reactance": 0.06,
+      "susceptance": 0.03
+    }
+  ]
+}
+\end{lstlisting}
+
+\subsubsection{PSS/E RAW Format}
+
+The application exports to PSS/E Version 33 RAW format for compatibility with power system analysis software.
+
+\section{Conclusion}
+
+PowerGrid Designer represents a significant advancement in power system education and analysis tools. By combining intuitive visual design with sophisticated computational methods, the application makes complex power system analysis accessible to a wide range of users.
+
+\subsection{Future Developments}
+
+Planned enhancements include:
+
+\begin{itemize}
+    \item Additional optimization algorithms (PSO, DE, etc.)
+    \item Dynamic analysis capabilities
+    \item Integration with external solvers
+    \item Enhanced visualization features
+    \item Collaborative design features
+\end{itemize}
+
+\subsection{Support and Resources}
+
+\begin{itemize}
+    \item \textbf{GitHub Repository}: Source code and issue tracking
+    \item \textbf{Documentation}: Comprehensive user guides and API references
+    \item \textbf{Community}: Discussion forums and user groups
+    \item \textbf{Education}: Tutorial videos and example problems
+\end{itemize}
+
+\subsection{Acknowledgments}
+
+This application was developed to advance power system education and research. Special thanks to the open-source community and academic contributors who have made this work possible.
+
+\end{document}

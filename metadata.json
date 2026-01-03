@@ -1,0 +1,5 @@
+{
+  "name": "PowerGrid Designer & Solver",
+  "description": "An advanced engineering tool for designing electrical power networks and performing AI-powered load flow calculations. Features an interactive node-based canvas for buses, lines, and generators.",
+  "requestFramePermissions": []
+}
